@@ -44,7 +44,9 @@ The options of generating multiple images are available: by default, the results
 ## Installation
 You should have Go 1.22 or newer installed.
 ```sh
-git clone git@github.com:voidsilhouette/flames.git
+git clone git@github.com:voidsilhouette/flames.git && cd flames
+go get ./...
+make run
 ```
 
 ## References
