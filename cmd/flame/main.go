@@ -16,14 +16,13 @@ func main() {
 	samples := flag.String("s", "32768", "number of event loop iterations")
 	iterations := flag.String("i", "512", "number of iterations per point")
 	goroutines := flag.String("g", "32", "maximum number of goroutines")
-	directory := flag.String("d", "images", "images directory name")
 
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	io := adapter.New(os.Stdout, os.Stdin, logger)
 
-	cfg, err := config.New(*width, *height, *samples, *iterations, *goroutines, *directory)
+	cfg, err := config.New(*width, *height, *samples, *iterations, *goroutines)
 	if err != nil {
 		io.Output(err.Error())
 		os.Exit(1)

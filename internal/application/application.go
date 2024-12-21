@@ -34,7 +34,7 @@ func New(cfg *config.Config) (*Application, error) {
 		}
 	}
 
-	manager, err := fileroutine.New(cfg.Directory)
+	manager, err := fileroutine.New()
 	if err != nil {
 		return nil, err
 	}

@@ -9,19 +9,20 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+
+	"github.com/es-debug/backend-academy-2024-go-template/config"
 )
 
 // ImagesManager manages the image directory and the naming of added files.
 type ImagesManager struct {
 	Directory   string
-	LastFile    string
 	FilePattern *regexp.Regexp
 }
 
 // New instantiates a new ImagesManager entity.
-func New(directory string) (*ImagesManager, error) {
+func New() (*ImagesManager, error) {
 	manager := &ImagesManager{
-		Directory:   directory,
+		Directory:   config.Directory,
 		FilePattern: regexp.MustCompile(`^fractal_(\d+)\.png$`),
 	}
 

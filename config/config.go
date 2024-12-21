@@ -20,6 +20,8 @@ const (
 
 	ColorLower = 0   // Lower bound for the rgb value.
 	ColorUpper = 255 // Upper bound for the rgb value.
+
+	Directory = "images" // Directory to store rendered images.
 )
 
 // Config stores all necessary image properties
@@ -30,11 +32,10 @@ type Config struct {
 	Samples    int
 	Iterations int
 	Goroutines int
-	Directory  string
 }
 
 // New instantiates a new Config entity.
-func New(width, height, samples, iterations, goroutines, directory string) (*Config, error) {
+func New(width, height, samples, iterations, goroutines string) (*Config, error) {
 	numericWidth, err := strconv.Atoi(width)
 	if err != nil {
 		return nil, InvalidWidthError
@@ -86,6 +87,5 @@ func New(width, height, samples, iterations, goroutines, directory string) (*Con
 		Samples:    numericSamples,
 		Iterations: numericIterations,
 		Goroutines: numericGoroutines,
-		Directory:  directory,
 	}, nil
 }
