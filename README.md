@@ -1,16 +1,53 @@
-# Шаблон Go-проекта для домашних заданий
+# The Fractal Flame Algorithm
 
-Шаблон для домашних заданий [Академии Бэкенда 2024](https://edu.tinkoff.ru/all-activities/courses/870efa9d-7067-4713-97ae-7db256b73eab).
+## Table of Contents
+- [Table of Contents](#table-of-contents)
+- [Implemented Affine Transformation](#implemented-affine-transformation)
+- [Usage](#usage)
+- [Installation](#installation)
+- [References](#references)
 
-Цель данного репозитория – познакомить вас с процессом разработки приложений на Go с использованием наиболее распространенных практик, инструментов и библиотек.
+The *Fractal Flame* Algorithm is a member of the Iterated Function System (IFS) class of fractal algorithms. A 2D IFS creates images by plotting the output of a chaotic attractor directly on the image plane.
 
-## Структура проекта
+## Implemented Affine Transformation 
+- Linear
+- Sinusoidal
+- Spherical
+- Polar 
+- Heart
+- Disk
 
-Это шаблон проекта, основанный на лучших практиках структурирования Go кода приложения. Проект содержит в себе следующие компоненты:
+## Usage
+There are a few options available to run this application:
 
-- `cmd` – директория, содержащая исполняемые файлы приложения. В данном шаблоне есть только один исполняемый файл `run`, который запускает приложение. Хорошей практикой является название пакета, содержащего `main.go` так же, как и название исполняемого файла. Таким образом в каждом домашнем задании вам будет необходимо изменять название пакета `run` на название, подходящее для вашего приложения.
-- `internal` – директория, содержащая внутренние пакеты приложения. Внутренние пакеты не могут быть импортированы другими пакетами вне проекта.
-  - `application` - пакет, в котором содержатся юзкейсы приложения.
-  - `domain` - пакет, в котором содержатся модели приложения.
-  - `infrastructure` - пакет, в котором содержатся инфраструктурные компоненты приложения(работа с выводом пользователю, работа с диском, работа с сетью и т.д.).
-- `pkg` – директория, содержащая пакеты, которые могут быть импортированы другими пакетами вне проекта. Общей рекомендацией является то, что пакеты, содержащиеся в `pkg` должны быть независимыми от остальных пакетов проекта.
+```sh
+  -g string
+        maximum number of goroutines (default "32")
+  -h string
+        image height (default "1080")
+  -i string
+        number of iterations per point (default "512")
+  -s string
+        number of event loop iterations (default "32768")
+  -w string
+        image width (default "1920")
+```
+
+For instance:
+
+```sh
+./fractal -w 2560 -h 1440
+```
+
+The options of generating multiple images are available: by default, the results will be stored in folder `images` in the root of the project.
+
+## Installation
+You should have Go 1.22 or newer installed.
+```sh
+git clone git@github.com:voidsilhouette/flames.git
+```
+
+## References
+- https://en.wikipedia.org/wiki/Fractal_flame
+- https://flam3.com/flame_draves.pdf
+- https://habr.com/ru/articles/251537/
