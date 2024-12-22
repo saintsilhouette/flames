@@ -17,10 +17,10 @@ func New(weight int) *Disk {
 // Transform computes the coordinates of the next point
 // to be chosen.
 func (d *Disk) Transform(x, y float64) (newX, newY float64) {
-	newX = 1.0 / math.Pi * math.Atan(y/x) * math.Sin(math.Pi*math.Sqrt(x*x+y*y))
-	newY = 1.0 / math.Pi * math.Atan(y/x) * math.Cos(math.Pi*math.Sqrt(x*x+y*y))
+	r := math.Sqrt(x*x + y*y)
+	theta := math.Atan2(x, y)
 
-	return newX, newY
+	return theta / math.Pi * math.Sin(math.Pi*r), theta / math.Pi * math.Cos(math.Pi*r)
 }
 
 // Weight returns the assigned weight.

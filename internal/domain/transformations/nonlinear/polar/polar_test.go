@@ -26,7 +26,7 @@ func TestPolarTransformation(t *testing.T) {
 		{
 			name: "transformation with coefficients with different signs",
 			x:    1.0, y: -1.0,
-			expx: -0.25, expy: 0.41421,
+			expx: 0.75, expy: 0.41421,
 		},
 	}
 

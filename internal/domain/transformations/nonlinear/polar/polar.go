@@ -17,10 +17,10 @@ func New(weight int) *Polar {
 // Transform computes the coordinates of the next point
 // to be chosen.
 func (p *Polar) Transform(x, y float64) (newX, newY float64) {
-	newX = math.Atan(y/x) / math.Pi
-	newY = math.Sqrt(x*x+y*y) - 1.0
+	r := math.Sqrt(x*x + y*y)
+	theta := math.Atan2(x, y)
 
-	return
+	return theta / math.Pi, r - 1
 }
 
 // Weight returns the assigned weight.

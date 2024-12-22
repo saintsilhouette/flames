@@ -26,7 +26,7 @@ func TestDiskTransformation(t *testing.T) {
 		{
 			name: "transformation with coefficients with different signs",
 			x:    1.0, y: -1.0,
-			expx: 0.24097, expy: 0.06656,
+			expx: -0.72292, expy: -0.19969,
 		},
 	}
 

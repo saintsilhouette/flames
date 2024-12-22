@@ -17,10 +17,10 @@ func New(weight int) *Heart {
 // Transform computes the coordinates of the next point
 // to be chosen.
 func (h *Heart) Transform(x, y float64) (newX, newY float64) {
-	newX = math.Sqrt(x*x+y*y) * math.Sin(math.Sqrt(x*x+y*y)*math.Atan2(x, y))
-	newY = -math.Sqrt(x*x+y*y) * math.Cos(math.Sqrt(x*x+y*y)*math.Atan2(x, y))
+	r := math.Sqrt(x*x + y*y)
+	theta := math.Atan2(x, y)
 
-	return newX, newY
+	return r * math.Sin(theta*r), r * math.Cos(theta*r)
 }
 
 // Weight returns the assigned weight.

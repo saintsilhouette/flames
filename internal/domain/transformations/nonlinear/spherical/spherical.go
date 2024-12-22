@@ -15,10 +15,9 @@ func New(weight int) *Spherical {
 // Transform computes the coordinates of the next point
 // to be chosen.
 func (s *Spherical) Transform(x, y float64) (newX, newY float64) {
-	newX = x / (x*x + y*y)
-	newY = y / (x*x + y*y)
+	rsquare := x*x + y*y
 
-	return
+	return x / rsquare, y / rsquare
 }
 
 // Weight returns the assigned weight.
