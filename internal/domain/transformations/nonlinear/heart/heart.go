@@ -20,7 +20,7 @@ func (h *Heart) Transform(x, y float64) (newX, newY float64) {
 	r := math.Sqrt(x*x + y*y)
 	theta := math.Atan2(x, y)
 
-	return r * math.Sin(theta*r), r * math.Cos(theta*r)
+	return r * math.Sin(theta*r), -r * math.Cos(theta*r)
 }
 
 // Weight returns the assigned weight.
