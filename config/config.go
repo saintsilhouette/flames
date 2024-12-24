@@ -1,7 +1,5 @@
 package config
 
-import "strconv"
-
 const (
 	MinimaX = -1.6 // Lower bound for the x-coordinate of the initial point.
 	MaximaX = 1.6  // Upper bound for the x-coordinate of the initial point.
@@ -22,70 +20,38 @@ const (
 	ColorUpper = 255 // Upper bound for the rgb value.
 
 	Directory = "images" // Directory to store rendered images.
+
+	Delta = 0.00001 // Delta to compare coordinates.
+
+	WidthUpperBound  = 7680 // Upper bound for the image width.
+	HeightUpperBound = 4320 // Upper bound for the image height.
 )
 
 // Config stores all necessary image properties
 // and information that affects on generation process.
 type Config struct {
-	Width      int
-	Height     int
-	Samples    int
-	Iterations int
-	Goroutines int
+	Width      uint
+	Height     uint
+	Samples    uint
+	Iterations uint
+	Goroutines uint
 }
 
 // New instantiates a new Config entity.
-func New(width, height, samples, iterations, goroutines string) (*Config, error) {
-	numericWidth, err := strconv.Atoi(width)
-	if err != nil {
-		return nil, InvalidWidthError
+func New(width, height, samples, iterations, goroutines uint) (*Config, error) {
+	if width > WidthUpperBound {
+		return nil, WidthValueOverflow
 	}
 
-	if numericWidth < 0 {
-		return nil, NegativeWidthError
-	}
-
-	numericHeight, err := strconv.Atoi(height)
-	if err != nil {
-		return nil, InvalidHeightError
-	}
-
-	if numericHeight < 0 {
-		return nil, NegativeHeightError
-	}
-
-	numericSamples, err := strconv.Atoi(samples)
-	if err != nil {
-		return nil, InvalidSamplesError
-	}
-
-	if numericSamples < 0 {
-		return nil, NegativeSamplesError
-	}
-
-	numericIterations, err := strconv.Atoi(iterations)
-	if err != nil {
-		return nil, InvalidIterationsError
-	}
-
-	if numericIterations < 0 {
-		return nil, NegativeIterationsError
-	}
-
-	numericGoroutines, err := strconv.Atoi(goroutines)
-	if err != nil {
-		return nil, InvalidGoroutinesError
-	}
-
-	if numericGoroutines < 0 {
-		return nil, NegativeGoroutinesError
+	if height > HeightUpperBound {
+		return nil, HeightValueOverflow
 	}
 
 	return &Config{
-		Width:      numericWidth,
-		Height:     numericHeight,
-		Samples:    numericSamples,
-		Iterations: numericIterations,
-		Goroutines: numericGoroutines,
+		Width:      width,
+		Height:     height,
+		Samples:    samples,
+		Iterations: iterations,
+		Goroutines: goroutines,
 	}, nil
 }

@@ -12,84 +12,25 @@ func TestApplicationInit(t *testing.T) {
 
 	type testCase struct {
 		name       string
-		height     string
-		width      string
-		samples    string
-		iterations string
-		goroutines string
+		height     uint
+		width      uint
+		samples    uint
+		iterations uint
+		goroutines uint
 		err        error
 	}
 
 	testCases := []testCase{
 		{
-			name:  "ascii width test",
-			width: "a",
-			err:   config.InvalidWidthError,
+			name:  "width overflow test",
+			width: 7681,
+			err:   config.WidthValueOverflow,
 		},
 		{
-			name:  "negative width test",
-			width: "-1",
-			err:   config.NegativeWidthError,
-		},
-		{
-			name:   "ascii height test",
-			width:  "1",
-			height: "a",
-			err:    config.InvalidHeightError,
-		},
-		{
-			name:   "negative height test",
-			width:  "1",
-			height: "-1",
-			err:    config.NegativeHeightError,
-		},
-		{
-			name:    "ascii samples test",
-			width:   "1",
-			height:  "1",
-			samples: "a",
-			err:     config.InvalidSamplesError,
-		},
-		{
-			name:    "negative samples test",
-			width:   "1",
-			height:  "1",
-			samples: "-1",
-			err:     config.NegativeSamplesError,
-		},
-		{
-			name:       "ascii iterations test",
-			width:      "1",
-			height:     "1",
-			samples:    "1",
-			iterations: "a",
-			err:        config.InvalidIterationsError,
-		},
-		{
-			name:       "negative iterations test",
-			width:      "1",
-			height:     "1",
-			samples:    "1",
-			iterations: "-1",
-			err:        config.NegativeIterationsError,
-		},
-		{
-			name:       "ascii goroutines test",
-			width:      "1",
-			height:     "1",
-			samples:    "1",
-			iterations: "1",
-			goroutines: "a",
-			err:        config.InvalidGoroutinesError,
-		},
-		{
-			name:       "negative goroutines test",
-			width:      "1",
-			height:     "1",
-			samples:    "1",
-			iterations: "1",
-			goroutines: "-1",
-			err:        config.NegativeGoroutinesError,
+			name:   "height overflow test",
+			width:  7680,
+			height: 4321,
+			err:    config.HeightValueOverflow,
 		},
 	}
 
@@ -109,6 +50,5 @@ func TestApplicationInit(t *testing.T) {
 }
 
 type IOAdapter interface {
-	Input() string
 	Output(string)
 }
