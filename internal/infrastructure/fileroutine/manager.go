@@ -103,8 +103,7 @@ func (im *ImagesManager) CreateImageFile(img *image.RGBA) error {
 	}
 	defer file.Close()
 
-	err = png.Encode(file, img)
-	if err != nil {
+	if err := png.Encode(file, img); err != nil {
 		return ImageEncodeError
 	}
 
