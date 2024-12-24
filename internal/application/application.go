@@ -45,7 +45,7 @@ func New(cfg *config.Config) (*Application, error) {
 
 // Render creates the actual fractal flames image.
 func (a *Application) Render() error {
-	a.FillTransformations()
+	a.fillTransformations()
 
 	wg := &sync.WaitGroup{}
 	guard := make(chan struct{}, a.Config.Goroutines)
@@ -60,15 +60,15 @@ func (a *Application) Render() error {
 		go func() {
 			defer wg.Done()
 			defer func() { <-guard }()
-			a.ProcessCell(newX, newY)
+			a.processCell(newX, newY)
 		}()
 	}
 
 	wg.Wait()
 
-	a.Correction()
+	a.correction()
 
-	if err := a.Manager.CreateImageFile(a.ConstructImage()); err != nil {
+	if err := a.Manager.CreateImageFile(a.constructImage()); err != nil {
 		return err
 	}
 

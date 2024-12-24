@@ -17,10 +17,10 @@ import (
 	"github.com/es-debug/backend-academy-2024-go-template/pkg"
 )
 
-// FillTransformations creates linear and nonlinear
+// fillTransformations creates linear and nonlinear
 // transformations as well as specifies the weight
 // of each transformation.
-func (a *Application) FillTransformations() {
+func (a *Application) fillTransformations() {
 	linearTransformations := make([]*linear.Linear, 0, config.NumberOfTransformations)
 
 	for range config.NumberOfTransformations {
@@ -49,9 +49,9 @@ func (a *Application) FillTransformations() {
 	a.Nonlinear = nonlinearTransformations
 }
 
-// SelectLinearTransformation randomly selects the linear
+// selectLinearTransformation randomly selects the linear
 // transformation from the generated slice.
-func (a *Application) SelectLinearTransformation() *linear.Linear {
+func (a *Application) selectLinearTransformation() *linear.Linear {
 	totalWeight := 0
 	cumulativeWeights := make([]int, 0, config.NumberOfTransformations)
 
@@ -85,8 +85,8 @@ func (a *Application) SelectNonlinearTransformation() Transformation {
 	return a.Nonlinear[min(index, len(a.Nonlinear)-1)]
 }
 
-// ConstructImage creates image based on 2D slice of pixels.
-func (a *Application) ConstructImage() *image.RGBA {
+// constructImage creates image based on 2D slice of pixels.
+func (a *Application) constructImage() *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, int(a.Config.Width), int(a.Config.Height))) //nolint
 
 	for i := range a.Config.Width {
@@ -106,9 +106,9 @@ func (a *Application) ConstructImage() *image.RGBA {
 	return img
 }
 
-// ScaleCoordinates scales transformed newX and newY
+// scaleCoordinates scales transformed newX and newY
 // with respect to the image size.
-func (a *Application) ScaleCoordinates(newX, newY float64) (x, y int) {
+func (a *Application) scaleCoordinates(newX, newY float64) (x, y int) {
 	x = int(a.Config.Width) - int(math.Trunc(((config.MaximaX-newX)/ //nolint
 		(config.MaximaX-config.MinimaX))*float64(a.Config.Width)))
 	y = int(a.Config.Height) - int(math.Trunc(((config.MaximaY-newY)/ //nolint
@@ -117,31 +117,23 @@ func (a *Application) ScaleCoordinates(newX, newY float64) (x, y int) {
 	return
 }
 
-// InsideBounds checks whether transformed newX and newY
+// insideBounds checks whether transformed newX and newY
 // satisfies the necessary bounds.
-func (a *Application) InsideBounds(newX, newY float64) bool {
+func (a *Application) insideBounds(newX, newY float64) bool {
 	return config.MinimaX <= newX && newX <= config.MaximaX &&
 		config.MinimaY <= newY && newY <= config.MaximaY
 }
 
-// InsideImage checks whether the obtained point inside
+// insideImage checks whether the obtained point inside
 // the image or not.
-func (a *Application) InsideImage(x, y int) bool {
+func (a *Application) insideImage(x, y int) bool {
 	return 0 <= x && x < int(a.Config.Width) && 0 <= y && y < int(a.Config.Height) //nolint
 }
 
-// Coloring colors cell is there were no hits by
-// taking color from a corresponding transformation.
-func (a *Application) Coloring(x, y int, linearTransformation *linear.Linear) {
-	a.Pixels[x][y].Color.Red = linearTransformation.Color.Red
-	a.Pixels[x][y].Color.Green = linearTransformation.Color.Green
-	a.Pixels[x][y].Color.Blue = linearTransformation.Color.Blue
-}
-
-// Correction performs brightness correction on
+// correction performs brightness correction on
 // the number of hits per pixel.
-func (a *Application) Correction() {
-	maxima, gamma := 0.0, 2.2
+func (a *Application) correction() {
+	maxima, gamma := 0.0, config.GammaCoefficient
 
 	for i := range a.Config.Width {
 		for j := range a.Config.Height {
@@ -158,21 +150,21 @@ func (a *Application) Correction() {
 	}
 }
 
-// ProcessCell implements logic of coloring the
+// processCell implements logic of coloring the
 // provided point with checking all necessary condition.
-func (a *Application) ProcessCell(newX, newY float64) {
+func (a *Application) processCell(newX, newY float64) {
 	mu := &sync.Mutex{}
 
 	for i := -20; i < int(a.Config.Iterations); i++ { //nolint
-		linearTransformation := a.SelectLinearTransformation()
+		linearTransformation := a.selectLinearTransformation()
 		newX, newY = linearTransformation.Transform(newX, newY)
 
 		nonlinearTransformation := a.SelectNonlinearTransformation()
 		newX, newY = nonlinearTransformation.Transform(newX, newY)
 
-		if i >= 0 && a.InsideBounds(newX, newY) {
-			x, y := a.ScaleCoordinates(newX, newY)
-			if a.InsideImage(x, y) {
+		if i >= 0 && a.insideBounds(newX, newY) {
+			x, y := a.scaleCoordinates(newX, newY)
+			if a.insideImage(x, y) {
 				mu.Lock()
 
 				red := linearTransformation.Color.Red
