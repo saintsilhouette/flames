@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"math"
 	"sort"
+	"sync"
 
 	"github.com/es-debug/backend-academy-2024-go-template/config"
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain/transformations/linear"
@@ -20,7 +21,7 @@ import (
 // transformations as well as specifies the weight
 // of each transformation.
 func (a *Application) FillTransformations() {
-	linearTransformations := make([]*linear.Linear, 0, 5)
+	linearTransformations := make([]*linear.Linear, 0, config.NumberOfTransformations)
 
 	for range config.NumberOfTransformations {
 		weight := pkg.GetRandomInt(config.WeightLower, config.WeightUpper)
@@ -31,7 +32,7 @@ func (a *Application) FillTransformations() {
 		return linearTransformations[i].Weight() < linearTransformations[j].Weight()
 	})
 
-	nonlinearTransformations := make([]Transformation, 0, 5)
+	nonlinearTransformations := make([]Transformation, 0, config.NumberOfTransformations)
 
 	nonlinearTransformations = append(nonlinearTransformations,
 		sinusoidal.New(pkg.GetRandomInt(config.WeightLower, config.WeightUpper)),
@@ -52,48 +53,41 @@ func (a *Application) FillTransformations() {
 // transformation from the generated slice.
 func (a *Application) SelectLinearTransformation() *linear.Linear {
 	totalWeight := 0
-	cumulativeWeights := make([]int, config.NumberOfTransformations)
+	cumulativeWeights := make([]int, 0, config.NumberOfTransformations)
 
-	for i, linear := range a.Linear {
+	for _, linear := range a.Linear {
 		totalWeight += linear.Weight()
-		cumulativeWeights[i] = linear.Weight()
+		cumulativeWeights = append(cumulativeWeights, linear.Weight())
 	}
 
 	r := pkg.GetRandomInt(0, totalWeight)
 
 	index := sort.SearchInts(cumulativeWeights, r)
 
-	if index == config.NumberOfTransformations {
-		return a.Linear[index-1]
-	}
-
-	return a.Linear[index]
+	return a.Linear[min(index, len(a.Linear)-1)]
 }
 
 // SelectNonlinearTransformation randomly selects the nonlinear
 // transformation from the generated slice.
 func (a *Application) SelectNonlinearTransformation() Transformation {
 	totalWeight := 0
-	cumulativeWeights := make([]int, config.NumberOfTransformations)
+	cumulativeWeights := make([]int, 0, config.NumberOfTransformations)
 
-	for i, nonlinear := range a.Nonlinear {
+	for _, nonlinear := range a.Nonlinear {
 		totalWeight += nonlinear.Weight()
-		cumulativeWeights[i] = nonlinear.Weight()
+		cumulativeWeights = append(cumulativeWeights, nonlinear.Weight())
 	}
 
 	r := pkg.GetRandomInt(0, totalWeight)
 
 	index := sort.SearchInts(cumulativeWeights, r)
 
-	if index == config.NumberOfTransformations {
-		return a.Nonlinear[index-1]
-	}
-
-	return a.Nonlinear[index]
+	return a.Nonlinear[min(index, len(a.Nonlinear)-1)]
 }
 
+// ConstructImage creates image based on 2D slice of pixels.
 func (a *Application) ConstructImage() *image.RGBA {
-	img := image.NewRGBA(image.Rect(0, 0, a.Config.Width, a.Config.Height))
+	img := image.NewRGBA(image.Rect(0, 0, int(a.Config.Width), int(a.Config.Height))) //nolint
 
 	for i := range a.Config.Width {
 		for j := range a.Config.Height {
@@ -104,7 +98,7 @@ func (a *Application) ConstructImage() *image.RGBA {
 					B: pkg.ClampToUint8(a.Pixels[i][j].Color.Blue),
 					A: 255,
 				}
-				img.Set(i, j, col)
+				img.Set(int(i), int(j), col) //nolint
 			}
 		}
 	}
@@ -115,9 +109,9 @@ func (a *Application) ConstructImage() *image.RGBA {
 // ScaleCoordinates scales transformed newX and newY
 // with respect to the image size.
 func (a *Application) ScaleCoordinates(newX, newY float64) (x, y int) {
-	x = a.Config.Width - int(math.Trunc(((config.MaximaX-newX)/
+	x = int(a.Config.Width) - int(math.Trunc(((config.MaximaX-newX)/ //nolint
 		(config.MaximaX-config.MinimaX))*float64(a.Config.Width)))
-	y = a.Config.Height - int(math.Trunc(((config.MaximaY-newY)/
+	y = int(a.Config.Height) - int(math.Trunc(((config.MaximaY-newY)/ //nolint
 		(config.MaximaY-config.MinimaY))*float64(a.Config.Height)))
 
 	return
@@ -133,7 +127,7 @@ func (a *Application) InsideBounds(newX, newY float64) bool {
 // InsideImage checks whether the obtained point inside
 // the image or not.
 func (a *Application) InsideImage(x, y int) bool {
-	return 0 <= x && x < a.Config.Width && 0 <= y && y < a.Config.Height
+	return 0 <= x && x < int(a.Config.Width) && 0 <= y && y < int(a.Config.Height) //nolint
 }
 
 // Coloring colors cell is there were no hits by
@@ -144,17 +138,6 @@ func (a *Application) Coloring(x, y int, linearTransformation *linear.Linear) {
 	a.Pixels[x][y].Color.Blue = linearTransformation.Color.Blue
 }
 
-// Recoloring recolors cell if there where hits by
-// combining cell's and transformation's colors.
-func (a *Application) Recoloring(x, y int, linearTransformation *linear.Linear) {
-	a.Pixels[x][y].Color.Red = (a.Pixels[x][y].Color.Red +
-		linearTransformation.Color.Red) / 2
-	a.Pixels[x][y].Color.Green = (a.Pixels[x][y].Color.Green +
-		linearTransformation.Color.Green) / 2
-	a.Pixels[x][y].Color.Blue = (a.Pixels[x][y].Color.Blue +
-		linearTransformation.Color.Blue) / 2
-}
-
 // Correction performs brightness correction on
 // the number of hits per pixel.
 func (a *Application) Correction() {
@@ -163,36 +146,24 @@ func (a *Application) Correction() {
 	for i := range a.Config.Width {
 		for j := range a.Config.Height {
 			if a.Pixels[i][j].Hits != 0 {
-				a.Pixels[i][j].Normal = math.Log10(float64(a.Pixels[i][j].Hits))
-				maxima = max(maxima, a.Pixels[i][j].Normal)
+				maxima = max(maxima, a.Pixels[i][j].LogCorrection())
 			}
 		}
 	}
 
 	for i := range a.Config.Width {
 		for j := range a.Config.Height {
-			a.Pixels[i][j].Normal /= maxima
-			a.CorrectCell(i, j, gamma)
+			a.Pixels[i][j].GammaCorrection(gamma, maxima)
 		}
 	}
 }
 
-// CorrectCell performs color correction with
-// respecet to the gamma coefficient.
-func (a *Application) CorrectCell(i, j int, gamma float64) {
-	a.Pixels[i][j].Color.Red = int(float64(a.Pixels[i][j].Color.Red) *
-		math.Pow(a.Pixels[i][j].Normal, 1.0/gamma))
-	a.Pixels[i][j].Color.Green = int(float64(a.Pixels[i][j].Color.Green) *
-		math.Pow(a.Pixels[i][j].Normal, 1.0/gamma))
-	a.Pixels[i][j].Color.Blue = int(float64(a.Pixels[i][j].Color.Blue) *
-		math.Pow(a.Pixels[i][j].Normal, 1.0/gamma))
-}
-
 // ProcessCell implements logic of coloring the
-// provided point with checking all necessary
-// condition.
+// provided point with checking all necessary condition.
 func (a *Application) ProcessCell(newX, newY float64) {
-	for i := -20; i < a.Config.Iterations; i++ {
+	mu := &sync.Mutex{}
+
+	for i := -20; i < int(a.Config.Iterations); i++ { //nolint
 		linearTransformation := a.SelectLinearTransformation()
 		newX, newY = linearTransformation.Transform(newX, newY)
 
@@ -202,17 +173,21 @@ func (a *Application) ProcessCell(newX, newY float64) {
 		if i >= 0 && a.InsideBounds(newX, newY) {
 			x, y := a.ScaleCoordinates(newX, newY)
 			if a.InsideImage(x, y) {
-				a.Mu.Lock()
+				mu.Lock()
+
+				red := linearTransformation.Color.Red
+				green := linearTransformation.Color.Green
+				blue := linearTransformation.Color.Blue
 
 				if a.Pixels[x][y].Hits == 0 {
-					a.Coloring(x, y, linearTransformation)
+					a.Pixels[x][y].Coloring(red, green, blue)
 				} else {
-					a.Recoloring(x, y, linearTransformation)
+					a.Pixels[x][y].Recoloring(red, green, blue)
 				}
 
 				a.Pixels[x][y].Hits++
 
-				a.Mu.Unlock()
+				mu.Unlock()
 			}
 		}
 	}

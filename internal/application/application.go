@@ -1,6 +1,7 @@
 package application
 
 import (
+	"image"
 	"sync"
 
 	"github.com/es-debug/backend-academy-2024-go-template/config"
@@ -16,12 +17,8 @@ type Application struct {
 	Nonlinear []Transformation
 	Pixels    [][]*pixel.Pixel
 
-	Mu    *sync.Mutex
-	Wg    *sync.WaitGroup
-	Guard chan struct{}
-
 	Config  *config.Config
-	Manager *fileroutine.ImagesManager
+	Manager Manager
 }
 
 // New instantities a new Application entity.
@@ -41,9 +38,6 @@ func New(cfg *config.Config) (*Application, error) {
 
 	return &Application{
 		Pixels:  pixels,
-		Mu:      &sync.Mutex{},
-		Wg:      &sync.WaitGroup{},
-		Guard:   make(chan struct{}, cfg.Goroutines),
 		Config:  cfg,
 		Manager: manager,
 	}, nil
@@ -53,32 +47,40 @@ func New(cfg *config.Config) (*Application, error) {
 func (a *Application) Render() error {
 	a.FillTransformations()
 
+	wg := &sync.WaitGroup{}
+	guard := make(chan struct{}, a.Config.Goroutines)
+
 	for range a.Config.Samples {
 		newX := pkg.GetRandomFloat64(config.MinimaX, config.MaximaX)
 		newY := pkg.GetRandomFloat64(config.MinimaY, config.MaximaY)
 
-		a.Wg.Add(1)
-		a.Guard <- struct{}{}
+		wg.Add(1)
+		guard <- struct{}{}
 
-		go func(x, y float64) {
-			defer a.Wg.Done()
-			defer func() { <-a.Guard }()
-			a.ProcessCell(x, y)
-		}(newX, newY)
+		go func() {
+			defer wg.Done()
+			defer func() { <-guard }()
+			a.ProcessCell(newX, newY)
+		}()
 	}
+
+	wg.Wait()
 
 	a.Correction()
 
-	err := a.Manager.CreateImageFile(a.ConstructImage())
-	if err != nil {
+	if err := a.Manager.CreateImageFile(a.ConstructImage()); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// Transformation provides the general interface for
-// the interaction with transformations.
+// Manager provides the interface for saving images.
+type Manager interface {
+	CreateImageFile(*image.RGBA) error
+}
+
+// Transformation provides the interface for transformations.
 type Transformation interface {
 	Transform(float64, float64) (float64, float64)
 	Weight() int
@@ -86,6 +88,5 @@ type Transformation interface {
 
 // IOAdapter provides the interface to work with i/o.
 type IOAdapter interface {
-	Input() string
 	Output(string)
 }
