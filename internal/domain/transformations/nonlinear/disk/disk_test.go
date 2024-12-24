@@ -3,8 +3,8 @@ package disk_test
 import (
 	"testing"
 
+	"github.com/es-debug/backend-academy-2024-go-template/config"
 	"github.com/es-debug/backend-academy-2024-go-template/internal/domain/transformations/nonlinear/disk"
-	"github.com/es-debug/backend-academy-2024-go-template/pkg"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,8 +40,8 @@ func TestDiskTransformation(t *testing.T) {
 
 			newX, newY := transformation.Transform(tc.x, tc.y)
 
-			assert.Equal(tt, tc.expx, pkg.TruncateFloat(newX, 5))
-			assert.Equal(tt, tc.expy, pkg.TruncateFloat(newY, 5))
+			assert.InDelta(tt, tc.expx, newX, config.Delta)
+			assert.InDelta(tt, tc.expy, newY, config.Delta)
 		})
 	}
 }
