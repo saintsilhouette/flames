@@ -35,6 +35,5 @@ func NewCoefficients() *Coefficients {
 	c := pkg.GetRandomFloat64(config.CoefficientLower, config.CoefficientUpper)
 	f := pkg.GetRandomFloat64(config.CoefficientLower, config.CoefficientUpper)
 
-	return &Coefficients{A: a, B: b, C: c,
-		D: d, E: e, F: f}
+	return &Coefficients{A: a, B: b, C: c, D: d, E: e, F: f}
 }
