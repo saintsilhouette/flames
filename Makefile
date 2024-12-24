@@ -24,4 +24,4 @@ run: build
 .PHONY: clear
 clear:
 	@echo "Removing build files (./bin/${TARGET}) and the 'images' directory if it exists..."
-	@rm -rf bin images
+	@rm -rf bin images coverage.out
