@@ -16,3 +16,4 @@ var ExistanceUncertaintyError = CustomError{Message: "unable to check directory!
 var FileCreationError = CustomError{Message: "file was not created!"}
 var ImageEncodeError = CustomError{Message: "image was not encoded!"}
 var DirectoryReadingError = CustomError{Message: "directory was not red!"}
+var InvalidImageIndex = CustomError{Message: "invalid image index!"}

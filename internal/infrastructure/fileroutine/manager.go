@@ -6,36 +6,34 @@ import (
 	"image/png"
 	"os"
 	"path"
-	"regexp"
-	"sort"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/es-debug/backend-academy-2024-go-template/config"
 )
 
 // ImagesManager manages the image directory and the naming of added files.
 type ImagesManager struct {
-	Directory   string
-	FilePattern *regexp.Regexp
+	Directory string
 }
 
 // New instantiates a new ImagesManager entity.
 func New() (*ImagesManager, error) {
 	manager := &ImagesManager{
-		Directory:   config.Directory,
-		FilePattern: regexp.MustCompile(`^fractal_(\d+)\.png$`),
+		Directory: config.Directory,
 	}
 
-	if err := manager.EnsureDirectory(); err != nil {
+	if err := manager.ensureDirectory(); err != nil {
 		return nil, ManagerCreationError
 	}
 
 	return manager, nil
 }
 
-// EnsureDirectory either checks that provided
+// ensureDirectory either checks that provided
 // directory exists or creates it.
-func (im *ImagesManager) EnsureDirectory() error {
+func (im *ImagesManager) ensureDirectory() error {
 	if _, err := os.Stat(im.Directory); os.IsNotExist(err) {
 		if err := os.MkdirAll(im.Directory, 0o755); err != nil {
 			return DirectoryCreationError
@@ -47,47 +45,56 @@ func (im *ImagesManager) EnsureDirectory() error {
 	return nil
 }
 
-// GetNextFileName determines the next available
-// filename that satisfies the pattern fractal_xxx.png.
-func (im *ImagesManager) GetNextFileName() (string, error) {
+// getNextFileName determines the suitable name for the
+// rendered image.
+func (im *ImagesManager) getNextFileName() (string, error) {
 	files, err := os.ReadDir(im.Directory)
 	if err != nil {
 		return "", DirectoryReadingError
 	}
 
-	indices := make([]int, 0, 16)
+	indexes := make([]int, 0, len(files))
 
-	for _, f := range files {
-		if f.IsDir() {
+	for _, file := range files {
+		if file.IsDir() {
 			continue
 		}
 
-		matches := im.FilePattern.FindStringSubmatch(f.Name())
-		index, err := strconv.Atoi(matches[1])
+		underscore := strings.LastIndex(file.Name(), "_")
+		if underscore == -1 {
+			continue
+		}
 
+		dot := strings.LastIndex(file.Name(), ".")
+		if dot == -1 {
+			continue
+		}
+
+		index, err := strconv.Atoi(file.Name()[underscore+1 : dot])
 		if err != nil {
-			continue
+			return "", InvalidImageIndex
 		}
 
-		indices = append(indices, index)
+		indexes = append(indexes, index)
 	}
 
-	sort.Ints(indices)
+	slices.Sort(indexes)
 
-	nextIndex := 1
-	if len(indices) != 0 {
-		nextIndex = indices[len(indices)-1] + 1
+	var index int
+
+	if len(indexes) == 0 {
+		index = 1
+	} else {
+		index = indexes[len(indexes)-1] + 1
 	}
 
-	nextFile := fmt.Sprintf("filename_%d.png", nextIndex)
-
-	return nextFile, nil
+	return fmt.Sprintf("fractal_%d.png", index), nil
 }
 
 // CreateImageFile creates file for the image
 // and writes it.
 func (im *ImagesManager) CreateImageFile(img *image.RGBA) error {
-	fileName, err := im.GetNextFileName()
+	fileName, err := im.getNextFileName()
 	if err != nil {
 		return err
 	}
