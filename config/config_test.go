@@ -17,6 +17,7 @@ func TestApplicationInit(t *testing.T) {
 		samples    uint
 		iterations uint
 		goroutines uint
+		symmetry   uint
 		directory  string
 		err        error
 	}
@@ -33,12 +34,19 @@ func TestApplicationInit(t *testing.T) {
 			height: 4321,
 			err:    config.HeightValueOverflow,
 		},
+		{
+			name:     "symmetry overflow test",
+			width:    1920,
+			height:   1080,
+			symmetry: 7,
+			err:      config.SymmetryValueOverflow,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(tt *testing.T) {
-			_, err := config.New(tc.width, tc.height, tc.samples, tc.iterations, tc.goroutines, tc.directory)
+			_, err := config.New(tc.width, tc.height, tc.samples, tc.iterations, tc.goroutines, tc.symmetry, tc.directory)
 
 			a := assert.New(tt)
 			if tc.err != nil {

@@ -12,3 +12,4 @@ func (e CustomError) Error() string {
 
 var WidthValueOverflow = CustomError{Message: "width value overflow!"}
 var HeightValueOverflow = CustomError{Message: "height value overflow!"}
+var SymmetryValueOverflow = CustomError{Message: "symmetry value overflow!"}

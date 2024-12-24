@@ -108,13 +108,22 @@ func (a *Application) constructImage() *image.RGBA {
 
 // scaleCoordinates scales transformed newX and newY
 // with respect to the image size.
-func (a *Application) scaleCoordinates(newX, newY float64) (x, y int) {
-	x = int(a.Config.Width) - int(math.Trunc(((config.MaximaX-newX)/ //nolint
-		(config.MaximaX-config.MinimaX))*float64(a.Config.Width)))
-	y = int(a.Config.Height) - int(math.Trunc(((config.MaximaY-newY)/ //nolint
-		(config.MaximaY-config.MinimaY))*float64(a.Config.Height)))
+func (a *Application) scaleCoordinates(newX, newY float64) (x, y float64) {
+	x = float64(a.Config.Width) - math.Trunc(((config.MaximaX-newX)/ //nolint
+		(config.MaximaX-config.MinimaX))*float64(a.Config.Width))
+	y = float64(a.Config.Height) - math.Trunc(((config.MaximaY-newY)/ //nolint
+		(config.MaximaY-config.MinimaY))*float64(a.Config.Height))
 
-	return
+	return x, y
+}
+
+// rotate performs rotatation of the selected pixel
+// using rotation matrix.
+func (a *Application) rotate(x, y, theta float64) (rotX, rotY int) {
+	rotX = int(x*math.Cos(theta) - y*math.Sin(theta))
+	rotY = int(x*math.Sin(theta) + y*math.Cos(theta))
+
+	return rotX, rotY
 }
 
 // insideBounds checks whether transformed newX and newY
@@ -162,24 +171,32 @@ func (a *Application) processCell(newX, newY float64) {
 		nonlinearTransformation := a.SelectNonlinearTransformation()
 		newX, newY = nonlinearTransformation.Transform(newX, newY)
 
-		if i >= 0 && a.insideBounds(newX, newY) {
-			x, y := a.scaleCoordinates(newX, newY)
-			if a.insideImage(x, y) {
-				red := linearTransformation.Color.Red
-				green := linearTransformation.Color.Green
-				blue := linearTransformation.Color.Blue
+		var theta float64
 
-				mu.Lock()
+		for range a.Config.Symmetry {
+			if i >= 0 && a.insideBounds(newX, newY) {
+				x, y := a.scaleCoordinates(newX, newY)
 
-				if a.Pixels[x][y].Hits == 0 {
-					a.Pixels[x][y].Coloring(red, green, blue)
-				} else {
-					a.Pixels[x][y].Recoloring(red, green, blue)
+				rotX, rotY := a.rotate(x, y, theta)
+				theta += config.Circle / float64(a.Config.Symmetry)
+
+				if a.insideImage(rotX, rotY) {
+					red := linearTransformation.Color.Red
+					green := linearTransformation.Color.Green
+					blue := linearTransformation.Color.Blue
+
+					mu.Lock()
+
+					if a.Pixels[rotX][rotY].Hits == 0 {
+						a.Pixels[rotX][rotY].Coloring(red, green, blue)
+					} else {
+						a.Pixels[rotX][rotY].Recoloring(red, green, blue)
+					}
+
+					a.Pixels[rotX][rotY].Hits++
+
+					mu.Unlock()
 				}
-
-				a.Pixels[x][y].Hits++
-
-				mu.Unlock()
 			}
 		}
 	}
