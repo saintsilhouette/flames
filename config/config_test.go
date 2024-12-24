@@ -17,6 +17,7 @@ func TestApplicationInit(t *testing.T) {
 		samples    uint
 		iterations uint
 		goroutines uint
+		directory  string
 		err        error
 	}
 
@@ -37,7 +38,7 @@ func TestApplicationInit(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(tt *testing.T) {
-			_, err := config.New(tc.width, tc.height, tc.samples, tc.iterations, tc.goroutines)
+			_, err := config.New(tc.width, tc.height, tc.samples, tc.iterations, tc.goroutines, tc.directory)
 
 			a := assert.New(tt)
 			if tc.err != nil {

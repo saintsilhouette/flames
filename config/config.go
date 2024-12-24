@@ -25,6 +25,10 @@ const (
 
 	WidthUpperBound  = 7680 // Upper bound for the image width.
 	HeightUpperBound = 4320 // Upper bound for the image height.
+
+	GammaCoefficient = 2.2 // Gamma correction coefficient.
+
+	NumberOfCores = 16 // Number of cores in my system for the benchmark purpose.
 )
 
 // Config stores all necessary image properties
@@ -35,10 +39,11 @@ type Config struct {
 	Samples    uint
 	Iterations uint
 	Goroutines uint
+	Directory  string
 }
 
 // New instantiates a new Config entity.
-func New(width, height, samples, iterations, goroutines uint) (*Config, error) {
+func New(width, height, samples, iterations, goroutines uint, directory string) (*Config, error) {
 	if width > WidthUpperBound {
 		return nil, WidthValueOverflow
 	}
@@ -53,5 +58,6 @@ func New(width, height, samples, iterations, goroutines uint) (*Config, error) {
 		Samples:    samples,
 		Iterations: iterations,
 		Goroutines: goroutines,
+		Directory:  directory,
 	}, nil
 }

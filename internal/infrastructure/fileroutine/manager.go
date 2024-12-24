@@ -9,8 +9,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-
-	"github.com/es-debug/backend-academy-2024-go-template/config"
 )
 
 // ImagesManager manages the image directory and the naming of added files.
@@ -19,16 +17,10 @@ type ImagesManager struct {
 }
 
 // New instantiates a new ImagesManager entity.
-func New() (*ImagesManager, error) {
-	manager := &ImagesManager{
-		Directory: config.Directory,
+func New(directory string) *ImagesManager {
+	return &ImagesManager{
+		Directory: directory,
 	}
-
-	if err := manager.ensureDirectory(); err != nil {
-		return nil, ManagerCreationError
-	}
-
-	return manager, nil
 }
 
 // ensureDirectory either checks that provided
@@ -94,6 +86,10 @@ func (im *ImagesManager) getNextFileName() (string, error) {
 // CreateImageFile creates file for the image
 // and writes it.
 func (im *ImagesManager) CreateImageFile(img *image.RGBA) error {
+	if err := im.ensureDirectory(); err != nil {
+		return DirectoryCreationError
+	}
+
 	fileName, err := im.getNextFileName()
 	if err != nil {
 		return err

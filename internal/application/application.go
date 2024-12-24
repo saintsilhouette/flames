@@ -22,7 +22,7 @@ type Application struct {
 }
 
 // New instantities a new Application entity.
-func New(cfg *config.Config) (*Application, error) {
+func New(cfg *config.Config) *Application {
 	pixels := make([][]*pixel.Pixel, cfg.Width)
 	for i := range cfg.Width {
 		pixels[i] = make([]*pixel.Pixel, cfg.Height)
@@ -31,16 +31,13 @@ func New(cfg *config.Config) (*Application, error) {
 		}
 	}
 
-	manager, err := fileroutine.New()
-	if err != nil {
-		return nil, err
-	}
+	manager := fileroutine.New(cfg.Directory)
 
 	return &Application{
 		Pixels:  pixels,
 		Config:  cfg,
 		Manager: manager,
-	}, nil
+	}
 }
 
 // Render creates the actual fractal flames image.
@@ -73,6 +70,33 @@ func (a *Application) Render() error {
 	}
 
 	return nil
+}
+
+// SyntheticRender implemented in order to measure the
+// efficiency of concurrent rendering process.
+func (a *Application) SyntheticRender() {
+	a.fillTransformations()
+
+	wg := &sync.WaitGroup{}
+	guard := make(chan struct{}, a.Config.Goroutines)
+
+	for range a.Config.Samples {
+		newX := pkg.GetRandomFloat64(config.MinimaX, config.MaximaX)
+		newY := pkg.GetRandomFloat64(config.MinimaY, config.MaximaY)
+
+		wg.Add(1)
+		guard <- struct{}{}
+
+		go func() {
+			defer wg.Done()
+			defer func() { <-guard }()
+			a.processCell(newX, newY)
+		}()
+	}
+
+	wg.Wait()
+
+	a.correction()
 }
 
 // Manager provides the interface for saving images.

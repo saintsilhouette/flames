@@ -165,11 +165,11 @@ func (a *Application) processCell(newX, newY float64) {
 		if i >= 0 && a.insideBounds(newX, newY) {
 			x, y := a.scaleCoordinates(newX, newY)
 			if a.insideImage(x, y) {
-				mu.Lock()
-
 				red := linearTransformation.Color.Red
 				green := linearTransformation.Color.Green
 				blue := linearTransformation.Color.Blue
+
+				mu.Lock()
 
 				if a.Pixels[x][y].Hits == 0 {
 					a.Pixels[x][y].Coloring(red, green, blue)
